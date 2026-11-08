@@ -37,10 +37,14 @@ fn usage() -> String {
     #|  verify CONTRACT.json SCRAPE.om [--json]
     #|  verify-many CONTRACT.json SCRAPE.om [SCRAPE.om ...] [--json]
     #|  draft EXPORTER SCRAPE.om [SCRAPE.om ...]
+    #|  review-template BASELINE.json CANDIDATE.json
+    #|  assess BASELINE.json CANDIDATE.json REVIEW.json [--json]
     #|  normalize CONTRACT.json
     #|  help
     #|Exit codes: 0 compatible, 1 incompatible, 2 invalid input/usage, 3 inconclusive.
     #|Compatibility is scoped to the supplied evidence and stable-v1 policy.
+    #|assess: 0 migration ready, 1 needs review, 2 invalid/stale, 3 inconclusive.
+    #|draft/normalize/review-template: 0 artifact prepared, 2 invalid input/usage.
     #|
   text
 }
@@ -50,9 +54,7 @@ async fn read_observations(
   paths : ArrayView[String],
 ) -> Array[@contract.Observation] {
   if paths.is_empty() || paths.length() > 64 {
-    raise @contract.ContractError(
-      "batch-size", "/observations", "supply between 1 and 64 scrape paths",
-    )
+    raise InputError("batch-size-1-to-64", "/observations")
   }
   let observations = []
   for path in paths {
@@ -75,6 +77,33 @@ async fn run(args : Array[String]) -> (String, Int32) {
   let as_json = args.last() == Some("--json")
   let args = if as_json { args[:args.length() - 1].to_owned() } else { args }
   let result = match args {
+    ["review-template", before, after] if !as_json => {
+      let value = @contract.migration_template(
+        @contract.read_contract(read_text(before)),
+        @contract.read_contract(read_text(after)),
+      )
+      return (value.stringify(indent=2) + "\n", 0)
+    }
+    ["assess", before, after, review] => {
+      let assessment = @contract.assess_migration(
+        @contract.read_contract(read_text(before)),
+        @contract.read_contract(read_text(after)),
+        @contract.read_migration_review(read_text(review)),
+      )
+      let code = match assessment.status() {
+        Ready => 0
+        NeedsReview => 1
+        Inconclusive => 3
+      }
+      return (
+        if as_json {
+          assessment.to_json().stringify(indent=2) + "\n"
+        } else {
+          assessment.to_text()
+        },
+        code,
+      )
+    }
     ["draft", exporter, .. paths] if !as_json => {
       let draft = @contract.draft_contract(exporter, read_observations(paths))
       return (draft.to_text(), 0)
@@ -140,7 +169,11 @@ async fn main {
           {
             "error": code,
             "location": path,
-            "message": "provide a readable UTF-8 file within the documented size limits",
+            "message": if code == "batch-size-1-to-64" {
+              "supply between 1 and 64 scrape paths"
+            } else {
+              "provide a readable UTF-8 file within the documented size limits"
+            },
           } : Json).stringify() +
         "\n",
       )

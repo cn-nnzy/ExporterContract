@@ -7,11 +7,17 @@ import {
 }
 
 // Values
+pub fn assess_migration(Contract, Contract, MigrationReview) -> MigrationAssessment raise ContractError
+
 pub fn compare_contracts(Contract, Contract) -> Report raise ContractError
 
 pub fn draft_contract(String, Array[Observation]) -> Contract raise ContractError
 
+pub fn migration_template(Contract, Contract) -> @json.Json raise ContractError
+
 pub fn read_contract(String) -> Contract raise ContractError
+
+pub fn read_migration_review(String) -> MigrationReview raise ContractError
 
 pub fn verify_export(Contract, Observation) -> Report
 
@@ -88,6 +94,40 @@ pub(all) enum MetricKind {
 pub fn MetricKind::equal(Self, Self) -> Bool
 pub fn MetricKind::not_equal(Self, Self) -> Bool
 pub fn MetricKind::to_repr(Self) -> @debug.Repr
+
+pub struct MigrationApproval {
+  code : String
+  metric : String
+  location : String
+  reviewer : String
+  reason : String
+  reference : String
+}
+
+pub struct MigrationAssessment {
+  // private fields
+}
+pub fn MigrationAssessment::outstanding(Self) -> Array[Finding]
+pub fn MigrationAssessment::report(Self) -> Report
+pub fn MigrationAssessment::status(Self) -> MigrationStatus
+pub fn MigrationAssessment::to_json(Self) -> @json.Json
+pub fn MigrationAssessment::to_text(Self) -> String
+
+pub struct MigrationReview {
+  // private fields
+}
+pub fn MigrationReview::approvals(Self) -> Array[MigrationApproval]
+pub fn MigrationReview::to_json(Self) -> @json.Json
+
+#derive(Eq, @debug.Debug)
+pub(all) enum MigrationStatus {
+  Ready
+  NeedsReview
+  Inconclusive
+}
+pub fn MigrationStatus::equal(Self, Self) -> Bool
+pub fn MigrationStatus::not_equal(Self, Self) -> Bool
+pub fn MigrationStatus::to_repr(Self) -> @debug.Repr
 
 #derive(Eq, @debug.Debug)
 pub struct Observation {

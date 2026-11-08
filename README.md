@@ -76,6 +76,10 @@ strict release policy, not a claim that every schema change breaks every query.
 | 2 | Invalid or unsupported input / command | Correct the input; no partial verdict is returned |
 | 3 | Inconclusive | Supply an exhaustive declaration or exercise missing emitters |
 
+These verdict exits apply to `compare`, `verify` and `verify-many`. `normalize`,
+`draft` and `review-template` return 0 when they successfully prepare an artifact.
+`assess` uses the separate migration-readiness statuses documented below.
+
 `compare` reports have scope `declared-contracts`. `verify` reports have scope
 `observed-export-only`: even a successful scrape check cannot prove that unseen
 runtime paths conform. Input failures go to stderr as JSON. Reports go to stdout
@@ -83,6 +87,13 @@ as text, or as versioned JSON with `--json`. `normalize CONTRACT.json` validates
 and prints the canonical contract representation.
 
 ## Library API
+
+For a deliberately breaking release, generate a version-bound review template
+with `review-template BASELINE.json CANDIDATE.json`, record individual decisions,
+then run `assess BASELINE.json CANDIDATE.json REVIEW.json --json`. A ready migration
+retains the underlying `incompatible` verdict. Unknown evidence cannot be
+approved away, and changing either contract invalidates old decisions. See the
+[complete migration example and trust model](docs/migration.md).
 
 For lazy metrics emitted by different integration paths, combine their evidence:
 
@@ -163,10 +174,9 @@ identifiers, which are included in diagnostics.
 ## Next capabilities
 
 The current milestone includes a file-based contract gate, multi-observation
-coverage evidence and conservative declaration drafting. Follow-up work is ordered
-by workflow: baseline migration support with explicit approval records, then
-narrowly reviewed metadata profiles. These are plans,
-not implemented features. PromQL parsing, alert dependency graphs,
+coverage evidence, conservative declaration drafting and version-bound migration
+review records. Follow-up work will add narrowly reviewed metadata profiles;
+these are planned, not implemented. PromQL parsing, alert dependency graphs,
 instrumentation and time-series storage remain outside the project boundary.
 
 See [ecosystem boundary](docs/ecosystem.md) and

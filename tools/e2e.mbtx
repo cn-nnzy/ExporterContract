@@ -41,6 +41,30 @@ async fn draft_example(target : String) -> Unit {
   assert_false(a.stdout().contains("GET"))
 }
 
+async fn migration_check(target : String, candidate : String, review : String, code : Int32, status : String) -> Unit {
+  let result = @shell.Cmd("moon", ["run", "--target", target, "cmd/check", "--", "assess",
+    "fixtures/migration/baseline.json", candidate, review, "--json"]).output(timeout_ms=120000)
+  assert_eq(result.exit_code(), code)
+  let value = @json.parse(result.stdout())
+  guard value is { "review_status": String(actual), "compatibility": { "verdict": String(verdict), .. }, .. } else {
+    fail("expected independent review status and compatibility verdict")
+  }
+  assert_eq(actual, status)
+  assert_eq(verdict, "incompatible")
+}
+
+async fn migration_template_example(target : String) -> Unit {
+  let result = @shell.Cmd("moon", ["run", "--target", target, "cmd/check", "--", "review-template",
+    "fixtures/migration/baseline.json", "fixtures/migration/candidate.json"]).output(timeout_ms=120000)
+  assert_eq(result.exit_code(), 0)
+  let value = @json.parse(result.stdout())
+  guard value is { "approvals": Array(entries), "baseline": Object(_), "candidate": Object(_), .. } else { fail("expected bound template") }
+  assert_eq(entries.length(), 1)
+  guard entries[0] is { "code": String(code), "reviewer": String(reviewer), .. } else { fail("expected unfilled review entry") }
+  assert_eq(code, "label-removed")
+  assert_eq(reviewer, "")
+}
+
 async fn main {
   let target = @env.args().get(1).unwrap_or("wasm")
   let baseline = "fixtures/kubernetes/baseline.json"
@@ -65,5 +89,13 @@ async fn main {
   check(target, ["draft", "synthetic-lazy-service", startup, "fixtures/coverage/mismatch.om"], 2, "")
   check(target, ["draft", "synthetic-lazy-service", "fixtures/empty.om"], 2, "")
   check(target, ["draft", "synthetic-lazy-service", startup, "fixtures/unsupported.om"], 2, "")
-  println("19 CLI scenarios passed on \{target}")
+  check(target, ["verify-many", coverage], 2, "")
+  check(target, ["draft", "synthetic-lazy-service"], 2, "")
+  migration_template_example(target)
+  migration_check(target, "fixtures/migration/candidate.json", "fixtures/migration/approved.json", 0, "ready")
+  migration_check(target, "fixtures/migration/candidate.json", "fixtures/migration/pending.json", 1, "needs-review")
+  migration_check(target, "fixtures/migration/partial.json", "fixtures/migration/incomplete.json", 3, "inconclusive")
+  check(target, ["assess", "fixtures/migration/baseline.json", "fixtures/migration/baseline.json", "fixtures/migration/approved.json", "--json"], 2, "")
+  check(target, ["assess", "fixtures/migration/baseline.json", "fixtures/migration/candidate.json", "fixtures/invalid.json", "--json"], 2, "")
+  println("27 CLI scenarios passed on \{target}")
 }
