@@ -13,7 +13,7 @@ async fn main {
     ["test", "--target", "wasm-gc", "--deny-warn"],
     ["test", "--target", "js", "--deny-warn"],
     ["build", "--target", "wasm,wasm-gc,js", "--deny-warn"],
-    ["run", "examples/api"], ["run", "tools/e2e.mbtx", "wasm"],
+    ["run", "examples/api"], ["run", "examples/coverage"], ["run", "tools/e2e.mbtx", "wasm"],
   ] {
     let result = @shell.Cmd("moon", arguments).output(timeout_ms=120000)
     if result.exit_code() != 0 {

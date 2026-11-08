@@ -31,6 +31,8 @@ pub fn verify_export(Contract, Observation) -> Report
 
 pub fn verify_exports(Contract, Array[Observation]) -> BatchReport raise ContractError
 
+pub fn verify_required_sources(Contract, Array[Observation], Map[String, Array[String]]) -> BatchReport raise ContractError
+
 // Errors
 pub suberror ContractError {
   ContractError(String, String, String)

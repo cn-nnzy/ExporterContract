@@ -56,6 +56,8 @@ jobs:
         run: moon build --target all --deny-warn
       - name: Library example
         run: moon run examples/api
+      - name: Required-source coverage example
+        run: moon run examples/coverage
       - name: CLI end-to-end (Wasm)
         run: moon run tools/e2e.mbtx wasm
       - name: CLI end-to-end (native)

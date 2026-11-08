@@ -88,6 +88,24 @@ and prints the canonical contract representation.
 
 ## Library API
 
+For test plans that require a family from a particular path, use
+`verify_required_sources(contract, observations, requirements)`. Requirements map
+declared family names to 1–64 distinct source identifiers. A family seen only in
+another source remains unknown for that requirement, even if aggregate coverage
+is complete. Missing sources also produce unknown evidence; schema violations
+still dominate. Unknown families, duplicate sources and empty plans are errors.
+There are at most 10,000 family requirements; ordinary batch limits still apply.
+Source names are assertions by the caller, not authenticated test identities.
+This is a portable library API; run its complete example with:
+
+```sh
+moon run examples/coverage
+```
+
+The synthetic example deliberately observes `active` in a startup test while
+requiring it in a traffic test, and asserts an inconclusive verdict. The returned
+`BatchReport` retains evidence and diagnostics with scope `required-source-coverage`.
+
 Store descriptor evidence instead of raw scrape values:
 
 ```sh
