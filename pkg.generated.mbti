@@ -23,6 +23,8 @@ pub fn read_contract(String) -> Contract raise ContractError
 
 pub fn read_migration_review(String) -> MigrationReview raise ContractError
 
+pub fn read_observation(String) -> Observation raise ContractError
+
 pub fn select_contract(Contract, Array[String], exporter~ : String) -> Contract raise ContractError
 
 pub fn verify_export(Contract, Observation) -> Report
@@ -143,6 +145,7 @@ pub fn Observation::equal(Self, Self) -> Bool
 pub fn Observation::new(String, Array[Metric]) -> Self raise ContractError
 pub fn Observation::not_equal(Self, Self) -> Bool
 pub fn Observation::source(Self) -> String
+pub fn Observation::to_json(Self) -> @json.Json
 pub fn Observation::to_repr(Self) -> @debug.Repr
 
 #derive(Eq, @debug.Debug)

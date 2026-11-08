@@ -103,5 +103,9 @@ async fn main {
   check(target, ["select", coverage, "http-scope", "absent"], 2, "")
   check(target, ["diff", baseline, "fixtures/kubernetes/breaking.json"], 0, "")
   check(target, ["diff", baseline, coverage], 2, "")
-  println("33 CLI scenarios passed on \{target}")
+  check(target, ["record", traffic], 0, "")
+  check(target, ["record", "fixtures/unsupported.om"], 2, "")
+  check(target, ["verify-record", coverage, "fixtures/coverage/traffic.record.json", "--json"], 3, "inconclusive")
+  check(target, ["verify-record", coverage, "fixtures/invalid.json", "--json"], 2, "")
+  println("37 CLI scenarios passed on \{target}")
 }

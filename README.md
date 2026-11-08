@@ -88,6 +88,23 @@ and prints the canonical contract representation.
 
 ## Library API
 
+Store descriptor evidence instead of raw scrape values:
+
+```sh
+moon run cmd/check -- record fixtures/coverage/traffic.om
+moon run cmd/check -- verify-record fixtures/coverage/contract.json fixtures/coverage/traffic.record.json --json
+```
+
+`record` validates the supported wire profile before emitting record format 1,
+`descriptor-only-v1`. `Observation::to_json()` and `read_observation()` support
+portable round trips, retaining repeated family groups and source identifiers.
+Sample values, label values and original wire bytes are deliberately absent.
+Records are asserted descriptor evidence, not authenticated scrape captures or
+proof of wire validity; verify original scrapes when that guarantee is needed.
+Unknown fields and profiles reject the whole record. Source identifiers are
+caller-controlled and retained, so use non-sensitive names. Input is bounded to
+2,097,152 code units and nesting depth 32. The record fixture is synthetic.
+
 `contract_diff(before, after)` returns exact schema changes with sorted family
 names and full `before`/`after` descriptors; additions/removals use null on the
 missing side. Completeness flags are retained separately, even if schemas are

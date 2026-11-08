@@ -43,6 +43,8 @@ fn usage() -> String {
     #|  combine CONTRACT.json [CONTRACT.json ...]
     #|  select CONTRACT.json SCOPE FAMILY [FAMILY ...]
     #|  diff BASELINE.json CANDIDATE.json
+    #|  record SCRAPE.om
+    #|  verify-record CONTRACT.json RECORD.json [--json]
     #|  help
     #|Exit codes: 0 compatible, 1 incompatible, 2 invalid input/usage, 3 inconclusive.
     #|Compatibility is scoped to the supplied evidence and stable-v1 policy.
@@ -80,6 +82,19 @@ async fn run(args : Array[String]) -> (String, Int32) {
   let as_json = args.last() == Some("--json")
   let args = if as_json { args[:args.length() - 1].to_owned() } else { args }
   let result = match args {
+    ["record", path] if !as_json =>
+      return (
+        @om.read_export(read_text(path), source=path)
+        .to_json()
+        .stringify(indent=2) +
+        "\n",
+        0,
+      )
+    ["verify-record", declaration, path] =>
+      @contract.verify_export(
+        @contract.read_contract(read_text(declaration)),
+        @contract.read_observation(read_text(path)),
+      )
     ["diff", before, after] if !as_json => {
       let value = @contract.contract_diff(
         @contract.read_contract(read_text(before)),

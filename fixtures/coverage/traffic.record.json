@@ -1,0 +1,1 @@
+{"version":1,"profile":"descriptor-only-v1","source":"synthetic-traffic-test","descriptors":[{"name":"requests","kind":"counter","unit":null,"labels":["method"]}]}
