@@ -118,6 +118,8 @@ contract artifact with exit 0 on success.
 `combine_contracts(parts)` combines 1–64 declarations for the same exporter.
 Identical repeated descriptors are deduplicated; conflicting schemas and generated
 wire-name collisions reject the entire combination. The result is complete only
+if all exhaustive declarations agree and no fragment adds an undeclared family;
+contradictory completeness claims are errors. It remains complete only
 if every input is complete. Combining partial fragments never proves an inventory
 exhaustive. For example, run `moon run cmd/check -- combine
 fixtures/coverage/contract.json fixtures/coverage/contract.json` to deduplicate

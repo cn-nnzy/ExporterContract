@@ -10,6 +10,20 @@ pub fn combine_contracts(
     )
   }
   let exporter = parts[0].exporter
+  let mut exhaustive : Contract? = None
+  for part in parts {
+    if part.complete {
+      match exhaustive {
+        Some(previous) =>
+          if previous != part {
+            refuse(
+              "contradictory-inventory", "/contracts", "complete declarations must describe the same exhaustive inventory",
+            )
+          }
+        None => exhaustive = Some(part)
+      }
+    }
+  }
   let metrics : Map[String, Metric] = Map([])
   let mut complete = true
   for part in parts {
@@ -34,6 +48,19 @@ pub fn combine_contracts(
       if metrics.length() > 10000 {
         refuse(
           "metric-limit", "/metrics", "combined inventory exceeds 10000 families",
+        )
+      }
+    }
+  }
+  if exhaustive is Some(full) {
+    let declared : Map[String, Unit] = Map([])
+    for m in full.metrics {
+      declared[m.name] = ()
+    }
+    for name, _ in metrics {
+      if !declared.contains(name) {
+        refuse(
+          "contradictory-inventory", name, "a fragment adds a family absent from a declaration marked complete; correct the completeness claim",
         )
       }
     }
