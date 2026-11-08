@@ -9,6 +9,8 @@ import {
 // Values
 pub fn assess_migration(Contract, Contract, MigrationReview) -> MigrationAssessment raise ContractError
 
+pub fn combine_contracts(Array[Contract]) -> Contract raise ContractError
+
 pub fn compare_contracts(Contract, Contract) -> Report raise ContractError
 
 pub fn draft_contract(String, Array[Observation]) -> Contract raise ContractError

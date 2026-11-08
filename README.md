@@ -88,6 +88,14 @@ and prints the canonical contract representation.
 
 ## Library API
 
+`combine_contracts(parts)` combines 1–64 declarations for the same exporter.
+Identical repeated descriptors are deduplicated; conflicting schemas and generated
+wire-name collisions reject the entire combination. The result is complete only
+if every input is complete. Combining partial fragments never proves an inventory
+exhaustive. For example, run `moon run cmd/check -- combine
+fixtures/coverage/contract.json fixtures/coverage/contract.json` to deduplicate
+identical declarations. The CLI prints a canonical artifact and exits 0 on success.
+
 For a deliberately breaking release, generate a version-bound review template
 with `review-template BASELINE.json CANDIDATE.json`, record individual decisions,
 then run `assess BASELINE.json CANDIDATE.json REVIEW.json --json`. A ready migration

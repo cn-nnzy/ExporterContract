@@ -40,6 +40,7 @@ fn usage() -> String {
     #|  review-template BASELINE.json CANDIDATE.json
     #|  assess BASELINE.json CANDIDATE.json REVIEW.json [--json]
     #|  normalize CONTRACT.json
+    #|  combine CONTRACT.json [CONTRACT.json ...]
     #|  help
     #|Exit codes: 0 compatible, 1 incompatible, 2 invalid input/usage, 3 inconclusive.
     #|Compatibility is scoped to the supplied evidence and stable-v1 policy.
@@ -77,6 +78,16 @@ async fn run(args : Array[String]) -> (String, Int32) {
   let as_json = args.last() == Some("--json")
   let args = if as_json { args[:args.length() - 1].to_owned() } else { args }
   let result = match args {
+    ["combine", .. paths] if !as_json => {
+      if paths.is_empty() || paths.length() > 64 {
+        raise InputError("batch-size-1-to-64", "/contracts")
+      }
+      let parts = []
+      for path in paths {
+        parts.push(@contract.read_contract(read_text(path)))
+      }
+      return (@contract.combine_contracts(parts).to_text(), 0)
+    }
     ["review-template", before, after] if !as_json => {
       let value = @contract.migration_template(
         @contract.read_contract(read_text(before)),
