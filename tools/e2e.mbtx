@@ -97,5 +97,11 @@ async fn main {
   migration_check(target, "fixtures/migration/partial.json", "fixtures/migration/incomplete.json", 3, "inconclusive")
   check(target, ["assess", "fixtures/migration/baseline.json", "fixtures/migration/baseline.json", "fixtures/migration/approved.json", "--json"], 2, "")
   check(target, ["assess", "fixtures/migration/baseline.json", "fixtures/migration/candidate.json", "fixtures/invalid.json", "--json"], 2, "")
-  println("27 CLI scenarios passed on \{target}")
+  check(target, ["combine", coverage, coverage], 0, "")
+  check(target, ["combine", coverage, baseline], 2, "")
+  check(target, ["select", coverage, "http-scope", "requests"], 0, "")
+  check(target, ["select", coverage, "http-scope", "absent"], 2, "")
+  check(target, ["diff", baseline, "fixtures/kubernetes/breaking.json"], 0, "")
+  check(target, ["diff", baseline, coverage], 2, "")
+  println("33 CLI scenarios passed on \{target}")
 }

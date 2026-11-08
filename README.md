@@ -88,6 +88,20 @@ and prints the canonical contract representation.
 
 ## Library API
 
+`contract_diff(before, after)` returns exact schema changes with sorted family
+names and full `before`/`after` descriptors; additions/removals use null on the
+missing side. Completeness flags are retained separately, even if schemas are
+unchanged. This supports release review without reconstructing changes from
+diagnostic prose. It makes no rename guesses and rejects different exporter scopes.
+
+```sh
+moon run cmd/check -- diff fixtures/kubernetes/baseline.json fixtures/kubernetes/breaking.json
+```
+
+`diff` exits 0 for a successfully produced artifact, including breaking changes;
+use `compare` as the compatibility gate. Format version 1 contains `exporter`,
+`complete_before`, `complete_after` and `changes`.
+
 Extract a team-owned scope with `select_contract(contract, names, exporter~)` or:
 
 ```sh

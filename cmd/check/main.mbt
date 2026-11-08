@@ -42,6 +42,7 @@ fn usage() -> String {
     #|  normalize CONTRACT.json
     #|  combine CONTRACT.json [CONTRACT.json ...]
     #|  select CONTRACT.json SCOPE FAMILY [FAMILY ...]
+    #|  diff BASELINE.json CANDIDATE.json
     #|  help
     #|Exit codes: 0 compatible, 1 incompatible, 2 invalid input/usage, 3 inconclusive.
     #|Compatibility is scoped to the supplied evidence and stable-v1 policy.
@@ -79,6 +80,13 @@ async fn run(args : Array[String]) -> (String, Int32) {
   let as_json = args.last() == Some("--json")
   let args = if as_json { args[:args.length() - 1].to_owned() } else { args }
   let result = match args {
+    ["diff", before, after] if !as_json => {
+      let value = @contract.contract_diff(
+        @contract.read_contract(read_text(before)),
+        @contract.read_contract(read_text(after)),
+      )
+      return (value.stringify(indent=2) + "\n", 0)
+    }
     ["select", path, exporter, .. names] if !as_json => {
       let selected = @contract.select_contract(
         @contract.read_contract(read_text(path)),
