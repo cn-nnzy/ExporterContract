@@ -69,6 +69,21 @@ and prints the canonical contract representation.
 
 ## Library API
 
+For lazy metrics emitted by different integration paths, combine their evidence:
+
+```sh
+moon run cmd/check -- verify-many fixtures/coverage/contract.json fixtures/coverage/startup.om fixtures/coverage/traffic.om --json
+```
+
+The result includes sorted `sources` and per-family `coverage` entries. Every
+descriptor is checked; a good scrape cannot override a mismatch in another.
+Missing families are unknown only when absent from the entire batch. Sources
+must be distinct, with 1–64 observations and at most 100,000 descriptors total.
+The library operation is `verify_exports(contract, observations) -> BatchReport`;
+`BatchReport::report()` returns the verdict/findings. This proves emission in the
+supplied sources, not coverage of every runtime path. The synthetic fixtures in
+`fixtures/coverage` model startup and traffic-driven emission.
+
 The root package contains the model and policy, independent of file I/O. The
 `adapters/openmetrics` package converts supported OpenMetrics observations using
 [moonopenmetrics](https://mooncakes.io/docs/JYPeng487/moonopenmetrics).
@@ -132,10 +147,10 @@ identifiers, which are included in diagnostics.
 
 ## Next capabilities
 
-The current milestone is a complete file-based contract gate. Follow-up work is
-ordered by workflow: collect multiple observations with explicit coverage
-evidence; add narrowly reviewed profiles for currently rejected metadata; then
-add baseline migration support with explicit approval records. These are plans,
+The current milestone includes a file-based contract gate and multi-observation
+coverage evidence. Follow-up work is ordered by workflow: prepare reviewable
+declarations from observations, then add baseline migration support with explicit
+approval records and narrowly reviewed metadata profiles. These are plans,
 not implemented features. PromQL parsing, alert dependency graphs,
 instrumentation and time-series storage remain outside the project boundary.
 

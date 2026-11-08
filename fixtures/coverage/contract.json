@@ -1,0 +1,1 @@
+{"version":1,"exporter":"synthetic-lazy-service","complete":true,"metrics":[{"name":"active","kind":"gauge","unit":null,"labels":[]},{"name":"requests","kind":"counter","unit":null,"labels":["method"]}]}

@@ -36,5 +36,14 @@ async fn main {
   check(target, ["verify", baseline, "fixtures/unsupported.om", "--json"], 2, "")
   check(target, ["normalize", "fixtures/invalid.json"], 2, "")
   check(target, ["normalize", "fixtures/not-present.json"], 2, "")
-  println("8 CLI scenarios passed on \{target}; valid, breaking, partial, missing, and unsupported evidence checked")
+  let coverage = "fixtures/coverage/contract.json"
+  let startup = "fixtures/coverage/startup.om"
+  let traffic = "fixtures/coverage/traffic.om"
+  check(target, ["verify", coverage, startup, "--json"], 3, "inconclusive")
+  check(target, ["verify-many", coverage, traffic, startup, "--json"], 0, "compatible")
+  check(target, ["verify-many", coverage, startup, "--json"], 3, "inconclusive")
+  check(target, ["verify-many", coverage, startup, "fixtures/coverage/mismatch.om", traffic, "--json"], 1, "incompatible")
+  check(target, ["verify-many", coverage, startup, startup, "--json"], 2, "")
+  check(target, ["verify-many", coverage, startup, "fixtures/unsupported.om", "--json"], 2, "")
+  println("14 CLI scenarios passed on \{target}")
 }

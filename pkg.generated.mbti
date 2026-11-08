@@ -13,12 +13,23 @@ pub fn read_contract(String) -> Contract raise ContractError
 
 pub fn verify_export(Contract, Observation) -> Report
 
+pub fn verify_exports(Contract, Array[Observation]) -> BatchReport raise ContractError
+
 // Errors
 pub suberror ContractError {
   ContractError(String, String, String)
 }
 
 // Types and methods
+pub struct BatchReport {
+  // private fields
+}
+pub fn BatchReport::coverage(Self) -> Array[MetricCoverage]
+pub fn BatchReport::report(Self) -> Report
+pub fn BatchReport::sources(Self) -> Array[String]
+pub fn BatchReport::to_json(Self) -> @json.Json
+pub fn BatchReport::to_text(Self) -> String
+
 #derive(Eq, @debug.Debug)
 pub struct Contract {
   // private fields
@@ -59,6 +70,12 @@ pub fn Metric::new(String, MetricKind, Array[String], unit? : String, buckets? :
 pub fn Metric::not_equal(Self, Self) -> Bool
 pub fn Metric::to_repr(Self) -> @debug.Repr
 pub fn Metric::unit(Self) -> String?
+
+pub struct MetricCoverage {
+  metric : String
+  // private fields
+}
+pub fn MetricCoverage::sources(Self) -> Array[String]
 
 #derive(Eq, @debug.Debug)
 pub(all) enum MetricKind {

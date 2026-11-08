@@ -1,0 +1,3 @@
+# TYPE active gauge
+active{route="synthetic"} 1
+# EOF

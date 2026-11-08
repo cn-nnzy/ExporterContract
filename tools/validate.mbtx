@@ -1,0 +1,25 @@
+----
+import {
+  "moonbitlang/async",
+  "moonbitlang/async/shell",
+}
+----
+
+async fn main {
+  for arguments in [
+    ["fmt"], ["info", "--target", "all"], ["fmt", "--check"],
+    ["check", "--target", "all", "--deny-warn"],
+    ["test", "--target", "wasm", "--deny-warn"],
+    ["test", "--target", "wasm-gc", "--deny-warn"],
+    ["test", "--target", "js", "--deny-warn"],
+    ["build", "--target", "wasm,wasm-gc,js", "--deny-warn"],
+    ["run", "examples/api"], ["run", "tools/e2e.mbtx", "wasm"],
+  ] {
+    let result = @shell.Cmd("moon", arguments).output(timeout_ms=120000)
+    if result.exit_code() != 0 {
+      fail("moon \{Repr(arguments)}: \{result.stdout()}\n\{result.stderr()}")
+    }
+    println("passed moon \{Repr(arguments)}: \{result.stdout()}\{result.stderr()}")
+  }
+  println("Native execution remains covered by the three-OS CI; this runner does not test native.")
+}

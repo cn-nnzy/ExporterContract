@@ -1,0 +1,3 @@
+# TYPE requests counter
+requests_total{method="GET"} 1
+# EOF

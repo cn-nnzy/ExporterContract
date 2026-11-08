@@ -35,6 +35,7 @@ fn usage() -> String {
     #|ExporterContract 0.1.0
     #|  compare BASELINE.json CANDIDATE.json [--json]
     #|  verify CONTRACT.json SCRAPE.om [--json]
+    #|  verify-many CONTRACT.json SCRAPE.om [SCRAPE.om ...] [--json]
     #|  normalize CONTRACT.json
     #|  help
     #|Exit codes: 0 compatible, 1 incompatible, 2 invalid input/usage, 3 inconclusive.
@@ -44,10 +45,45 @@ fn usage() -> String {
 }
 
 ///|
+async fn read_observations(
+  paths : ArrayView[String],
+) -> Array[@contract.Observation] {
+  if paths.is_empty() || paths.length() > 64 {
+    raise InputError("batch-size-1-to-64", "/observations")
+  }
+  let observations = []
+  for path in paths {
+    observations.push(@om.read_export(read_text(path), source=path))
+  }
+  observations
+}
+
+///|
+fn verdict_code(verdict : @contract.Verdict) -> Int32 {
+  match verdict {
+    Compatible => 0
+    Incompatible => 1
+    Inconclusive => 3
+  }
+}
+
+///|
 async fn run(args : Array[String]) -> (String, Int32) {
   let as_json = args.last() == Some("--json")
   let args = if as_json { args[:args.length() - 1].to_owned() } else { args }
   let result = match args {
+    ["verify-many", declaration, .. paths] => {
+      let contract = @contract.read_contract(read_text(declaration))
+      let batch = @contract.verify_exports(contract, read_observations(paths))
+      return (
+        if as_json {
+          batch.to_json().stringify(indent=2) + "\n"
+        } else {
+          batch.to_text()
+        },
+        verdict_code(batch.report().verdict()),
+      )
+    }
     ["compare", before, after] => {
       let baseline = @contract.read_contract(read_text(before))
       let candidate = @contract.read_contract(read_text(after))
@@ -63,11 +99,7 @@ async fn run(args : Array[String]) -> (String, Int32) {
     ["help"] | [] if !as_json => return (usage(), 0)
     _ => return (usage(), 2)
   }
-  let code = match result.verdict() {
-    Compatible => 0
-    Incompatible => 1
-    Inconclusive => 3
-  }
+  let code = verdict_code(result.verdict())
   (
     if as_json {
       result.to_json().stringify(indent=2) + "\n"

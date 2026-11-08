@@ -65,6 +65,16 @@ not source spans. Parser errors include line/column when available.
 
 ## Accepted observation profile
 
+`verify_exports` checks a batch of 1–64 observations with unique source
+identifiers and at most 100,000 descriptors in total. Its `BatchReport` includes
+all source identifiers (including empty observations), sorted per-family source
+lists, and a normal `Report` scoped `observed-exports-only`. Coverage includes
+declared but unobserved families with an empty source list, and undeclared
+observed families. It describes emission, not successful conformance. Mismatches
+remain attributed to their original source. Batch order does not change output;
+within-source descriptor indices refer to that observation. The single-source
+API and its JSON format remain unchanged.
+
 The adapter accepts OpenMetrics 1.0 text with its required EOF marker and
 explicit counter, gauge and classic histogram types. Existing parser and
 validator behavior comes from `JYPeng487/moonopenmetrics@0.1.1`.
