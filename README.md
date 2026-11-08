@@ -88,6 +88,19 @@ and prints the canonical contract representation.
 
 ## Library API
 
+Extract a team-owned scope with `select_contract(contract, names, exporter~)` or:
+
+```sh
+moon run cmd/check -- select fixtures/coverage/contract.json http-scope requests
+```
+
+Every requested family must exist and occur once. The new scope identifier must
+differ from the parent; completeness is inherited, never upgraded. Compare only
+contracts with the same selected scope across releases. This selects declarations,
+not scrape data: passing a full scrape to this subset still reports undeclared
+families. Empty selections and misspelled names are errors. Output is a canonical
+contract artifact with exit 0 on success.
+
 `combine_contracts(parts)` combines 1–64 declarations for the same exporter.
 Identical repeated descriptors are deduplicated; conflicting schemas and generated
 wire-name collisions reject the entire combination. The result is complete only

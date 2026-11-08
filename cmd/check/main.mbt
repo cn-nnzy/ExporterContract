@@ -41,6 +41,7 @@ fn usage() -> String {
     #|  assess BASELINE.json CANDIDATE.json REVIEW.json [--json]
     #|  normalize CONTRACT.json
     #|  combine CONTRACT.json [CONTRACT.json ...]
+    #|  select CONTRACT.json SCOPE FAMILY [FAMILY ...]
     #|  help
     #|Exit codes: 0 compatible, 1 incompatible, 2 invalid input/usage, 3 inconclusive.
     #|Compatibility is scoped to the supplied evidence and stable-v1 policy.
@@ -78,6 +79,14 @@ async fn run(args : Array[String]) -> (String, Int32) {
   let as_json = args.last() == Some("--json")
   let args = if as_json { args[:args.length() - 1].to_owned() } else { args }
   let result = match args {
+    ["select", path, exporter, .. names] if !as_json => {
+      let selected = @contract.select_contract(
+        @contract.read_contract(read_text(path)),
+        names.to_owned(),
+        exporter~,
+      )
+      return (selected.to_text(), 0)
+    }
     ["combine", .. paths] if !as_json => {
       if paths.is_empty() || paths.length() > 64 {
         raise InputError("batch-size-1-to-64", "/contracts")

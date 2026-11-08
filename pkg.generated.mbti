@@ -21,6 +21,8 @@ pub fn read_contract(String) -> Contract raise ContractError
 
 pub fn read_migration_review(String) -> MigrationReview raise ContractError
 
+pub fn select_contract(Contract, Array[String], exporter~ : String) -> Contract raise ContractError
+
 pub fn verify_export(Contract, Observation) -> Report
 
 pub fn verify_exports(Contract, Array[Observation]) -> BatchReport raise ContractError
