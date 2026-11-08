@@ -45,6 +45,7 @@ fn usage() -> String {
     #|  diff BASELINE.json CANDIDATE.json
     #|  record SCRAPE.om
     #|  verify-record CONTRACT.json RECORD.json [--json]
+    #|  verify-plan CONTRACT.json PLAN.json RECORD.json [RECORD.json ...] [--json]
     #|  help
     #|Exit codes: 0 compatible, 1 incompatible, 2 invalid input/usage, 3 inconclusive.
     #|Compatibility is scoped to the supplied evidence and stable-v1 policy.
@@ -82,6 +83,28 @@ async fn run(args : Array[String]) -> (String, Int32) {
   let as_json = args.last() == Some("--json")
   let args = if as_json { args[:args.length() - 1].to_owned() } else { args }
   let result = match args {
+    ["verify-plan", declaration, plan, .. paths] => {
+      if paths.is_empty() || paths.length() > 64 {
+        raise InputError("batch-size-1-to-64", "/records")
+      }
+      let observations = []
+      for path in paths {
+        observations.push(@contract.read_observation(read_text(path)))
+      }
+      let batch = @contract.verify_required_sources(
+        @contract.read_contract(read_text(declaration)),
+        observations,
+        @contract.read_coverage_plan(read_text(plan)),
+      )
+      return (
+        if as_json {
+          batch.to_json().stringify(indent=2) + "\n"
+        } else {
+          batch.to_text()
+        },
+        verdict_code(batch.report().verdict()),
+      )
+    }
     ["record", path] if !as_json =>
       return (
         @om.read_export(read_text(path), source=path)

@@ -21,6 +21,8 @@ pub fn migration_template(Contract, Contract) -> @json.Json raise ContractError
 
 pub fn read_contract(String) -> Contract raise ContractError
 
+pub fn read_coverage_plan(String) -> Map[String, Array[String]] raise ContractError
+
 pub fn read_migration_review(String) -> MigrationReview raise ContractError
 
 pub fn read_observation(String) -> Observation raise ContractError

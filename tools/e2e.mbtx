@@ -107,5 +107,12 @@ async fn main {
   check(target, ["record", "fixtures/unsupported.om"], 2, "")
   check(target, ["verify-record", coverage, "fixtures/coverage/traffic.record.json", "--json"], 3, "inconclusive")
   check(target, ["verify-record", coverage, "fixtures/invalid.json", "--json"], 2, "")
-  println("37 CLI scenarios passed on \{target}")
+  let plan = "fixtures/coverage/plan.json"
+  let startup_record = "fixtures/coverage/startup.record.json"
+  let traffic_record = "fixtures/coverage/traffic.record.json"
+  check(target, ["verify-plan", coverage, plan, startup_record, traffic_record, "--json"], 0, "compatible")
+  check(target, ["verify-plan", coverage, plan, startup_record, "--json"], 3, "inconclusive")
+  check(target, ["verify-plan", coverage, plan, startup_record, startup_record, "--json"], 2, "")
+  check(target, ["verify-plan", coverage, "fixtures/invalid.json", traffic_record, "--json"], 2, "")
+  println("41 CLI scenarios passed on \{target}")
 }
