@@ -1,0 +1,20 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "cn-nnzy/exportercontract/adapters/openmetrics"
+
+import {
+  "cn-nnzy/exportercontract",
+}
+
+// Values
+pub fn read_export(String, source~ : String) -> @exportercontract.Observation raise ExportError
+
+// Errors
+pub suberror ExportError {
+  ExportError(String, String, String)
+}
+
+// Types and methods
+
+// Type aliases
+
+// Traits

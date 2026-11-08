@@ -1,0 +1,7 @@
+ExporterContract
+Copyright 2026 cn-nnzy
+
+This distribution includes fixtures/kubernetes/stable-metrics-list.yaml from
+the Kubernetes project, copyright The Kubernetes Authors, licensed under the
+Apache License, Version 2.0. Derived fixture descriptors are identified in
+fixtures/kubernetes/README.md.

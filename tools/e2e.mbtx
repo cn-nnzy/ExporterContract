@@ -1,0 +1,40 @@
+----
+import {
+  "moonbitlang/async",
+  "moonbitlang/async/shell",
+  "moonbitlang/core/env",
+  "moonbitlang/core/json",
+}
+----
+
+async fn check(target : String, arguments : Array[String], expected_code : Int32, expected_verdict : String) -> Unit {
+  let argv = ["run", "--target", target, "cmd/check", "--"]
+  argv.append(arguments)
+  let result = @shell.Cmd("moon", argv).output(timeout_ms=120000)
+  if result.exit_code() != expected_code {
+    fail("unexpected CLI exit \{result.exit_code()}, expected \{expected_code}; stderr: \{result.stderr()}")
+  }
+  if expected_verdict != "" {
+    let json = @json.parse(result.stdout())
+    guard json is { "verdict": String(verdict), .. } && verdict == expected_verdict else {
+      fail("incorrect report verdict")
+    }
+  } else if expected_code == 2 {
+    let json = @json.parse(result.stderr())
+    guard json is { "error": String(_), .. } else { fail("expected structured input error") }
+  }
+}
+
+async fn main {
+  let target = @env.args().get(1).unwrap_or("wasm")
+  let baseline = "fixtures/kubernetes/baseline.json"
+  check(target, ["compare", baseline, baseline, "--json"], 0, "compatible")
+  check(target, ["compare", baseline, "fixtures/kubernetes/breaking.json", "--json"], 1, "incompatible")
+  check(target, ["compare", baseline, "fixtures/kubernetes/partial.json", "--json"], 3, "inconclusive")
+  check(target, ["verify", baseline, "fixtures/kubernetes/observation.om", "--json"], 0, "compatible")
+  check(target, ["verify", baseline, "fixtures/empty.om", "--json"], 3, "inconclusive")
+  check(target, ["verify", baseline, "fixtures/unsupported.om", "--json"], 2, "")
+  check(target, ["normalize", "fixtures/invalid.json"], 2, "")
+  check(target, ["normalize", "fixtures/not-present.json"], 2, "")
+  println("8 CLI scenarios passed on \{target}; valid, breaking, partial, missing, and unsupported evidence checked")
+}

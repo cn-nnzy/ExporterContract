@@ -1,0 +1,4 @@
+# HELP build build information
+# TYPE build info
+build_info{version="1.0"} 1
+# EOF

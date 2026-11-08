@@ -1,0 +1,118 @@
+// Generated using `moon info`, DON'T EDIT IT
+package "cn-nnzy/exportercontract"
+
+import {
+  "moonbitlang/core/debug",
+  "moonbitlang/core/json",
+}
+
+// Values
+pub fn compare_contracts(Contract, Contract) -> Report raise ContractError
+
+pub fn read_contract(String) -> Contract raise ContractError
+
+pub fn verify_export(Contract, Observation) -> Report
+
+// Errors
+pub suberror ContractError {
+  ContractError(String, String, String)
+}
+
+// Types and methods
+#derive(Eq, @debug.Debug)
+pub struct Contract {
+  // private fields
+}
+pub fn Contract::equal(Self, Self) -> Bool
+pub fn Contract::exporter(Self) -> String
+pub fn Contract::is_complete(Self) -> Bool
+pub fn Contract::metrics(Self) -> Array[Metric]
+pub fn Contract::new(String, Array[Metric], complete~ : Bool) -> Self raise ContractError
+pub fn Contract::not_equal(Self, Self) -> Bool
+pub fn Contract::to_json(Self) -> @json.Json
+pub fn Contract::to_repr(Self) -> @debug.Repr
+pub fn Contract::to_text(Self) -> String
+
+#derive(Eq, @debug.Debug)
+pub struct Finding {
+  severity : Severity
+  code : String
+  metric : String
+  location : String
+  message : String
+  remedy : String
+}
+pub fn Finding::equal(Self, Self) -> Bool
+pub fn Finding::not_equal(Self, Self) -> Bool
+pub fn Finding::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
+pub struct Metric {
+  // private fields
+}
+pub fn Metric::buckets(Self) -> Array[Double]
+pub fn Metric::equal(Self, Self) -> Bool
+pub fn Metric::kind(Self) -> MetricKind
+pub fn Metric::labels(Self) -> Array[String]
+pub fn Metric::name(Self) -> String
+pub fn Metric::new(String, MetricKind, Array[String], unit? : String, buckets? : Array[Double]) -> Self raise ContractError
+pub fn Metric::not_equal(Self, Self) -> Bool
+pub fn Metric::to_repr(Self) -> @debug.Repr
+pub fn Metric::unit(Self) -> String?
+
+#derive(Eq, @debug.Debug)
+pub(all) enum MetricKind {
+  Counter
+  Gauge
+  Histogram
+}
+pub fn MetricKind::equal(Self, Self) -> Bool
+pub fn MetricKind::not_equal(Self, Self) -> Bool
+pub fn MetricKind::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
+pub struct Observation {
+  // private fields
+}
+pub fn Observation::equal(Self, Self) -> Bool
+pub fn Observation::new(String, Array[Metric]) -> Self raise ContractError
+pub fn Observation::not_equal(Self, Self) -> Bool
+pub fn Observation::source(Self) -> String
+pub fn Observation::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
+pub struct Report {
+  // private fields
+}
+pub fn Report::equal(Self, Self) -> Bool
+pub fn Report::findings(Self) -> Array[Finding]
+pub fn Report::not_equal(Self, Self) -> Bool
+pub fn Report::scope(Self) -> String
+pub fn Report::to_json(Self) -> @json.Json
+pub fn Report::to_repr(Self) -> @debug.Repr
+pub fn Report::to_text(Self) -> String
+pub fn Report::verdict(Self) -> Verdict
+
+#derive(Eq, @debug.Debug)
+pub(all) enum Severity {
+  Notice
+  Unknown
+  Breaking
+}
+pub fn Severity::equal(Self, Self) -> Bool
+pub fn Severity::not_equal(Self, Self) -> Bool
+pub fn Severity::to_repr(Self) -> @debug.Repr
+
+#derive(Eq, @debug.Debug)
+pub(all) enum Verdict {
+  Compatible
+  Inconclusive
+  Incompatible
+}
+pub fn Verdict::equal(Self, Self) -> Bool
+pub fn Verdict::not_equal(Self, Self) -> Bool
+pub fn Verdict::to_repr(Self) -> @debug.Repr
+
+// Type aliases
+
+// Traits

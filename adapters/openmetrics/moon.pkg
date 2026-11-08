@@ -1,0 +1,8 @@
+import {
+  "cn-nnzy/exportercontract" @contract,
+  "JYPeng487/moonopenmetrics" @om,
+}
+
+import {
+  "cn-nnzy/exportercontract" @contract,
+} for "test"

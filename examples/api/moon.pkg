@@ -1,0 +1,6 @@
+import {
+  "cn-nnzy/exportercontract" @contract,
+  "cn-nnzy/exportercontract/adapters/openmetrics",
+}
+
+pkgtype(kind: "executable")

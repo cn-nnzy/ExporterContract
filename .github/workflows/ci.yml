@@ -1,0 +1,62 @@
+name: checks
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install stable MoonBit (Unix)
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          curl -fsSL https://cli.moonbitlang.com/install/unix.sh | bash
+          echo "$HOME/.moon/bin" >> "$GITHUB_PATH"
+      - name: Install stable MoonBit (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          irm https://cli.moonbitlang.com/install/powershell.ps1 | iex
+          "$env:USERPROFILE\.moon\bin" >> $env:GITHUB_PATH
+      - uses: ilammy/msvc-dev-cmd@v1
+        if: runner.os == 'Windows'
+      - name: Toolchain version
+        run: moon version --all
+      - name: Resolve dependencies
+        run: moon update
+      - name: Formatting
+        run: moon fmt --check
+      - name: Generate public interfaces
+        run: moon info --target all
+      - name: Check interface drift
+        run: git diff --exit-code
+      - name: Strict type check
+        run: moon check --target all --deny-warn
+      - name: Test Wasm
+        run: moon test --target wasm --deny-warn
+      - name: Test Wasm-GC
+        run: moon test --target wasm-gc --deny-warn
+      - name: Test JavaScript
+        run: moon test --target js --deny-warn
+      - name: Test native
+        run: moon test --target native --deny-warn
+      - name: Build all supported targets
+        run: moon build --target all --deny-warn
+      - name: Library example
+        run: moon run examples/api
+      - name: CLI end-to-end (Wasm)
+        run: moon run tools/e2e.mbtx wasm
+      - name: CLI end-to-end (native)
+        run: moon run tools/e2e.mbtx native

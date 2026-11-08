@@ -1,0 +1,35 @@
+# HELP apiserver_request Counter descriptor projected from the public Kubernetes fixture; values below are synthetic.
+# TYPE apiserver_request counter
+apiserver_request_total{code="200",component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1"} 1
+# HELP apiserver_requested_deprecated_apis Gauge descriptor projected from the public Kubernetes fixture; values below are synthetic.
+# TYPE apiserver_requested_deprecated_apis gauge
+apiserver_requested_deprecated_apis{group="",removed_release="1.40",resource="pods",subresource="",version="v1"} 0
+# HELP apiserver_request_duration_seconds Histogram descriptor projected from the public Kubernetes fixture; values below are synthetic.
+# TYPE apiserver_request_duration_seconds histogram
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="0.005"} 0
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="0.025"} 0
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="0.05"} 0
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="0.1"} 0
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="0.2"} 0
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="0.4"} 0
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="0.6"} 0
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="0.8"} 0
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="1"} 0
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="1.25"} 0
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="1.5"} 0
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="2"} 0
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="3"} 0
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="4"} 0
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="5"} 0
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="6"} 0
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="8"} 0
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="10"} 0
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="15"} 0
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="20"} 0
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="30"} 0
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="45"} 0
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="60"} 0
+apiserver_request_duration_seconds_bucket{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1",le="+Inf"} 1
+apiserver_request_duration_seconds_sum{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1"} 61
+apiserver_request_duration_seconds_count{component="apiserver",dry_run="",group="",resource="pods",scope="namespace",subresource="",verb="LIST",version="v1"} 1
+# EOF
