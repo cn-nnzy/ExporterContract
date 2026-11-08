@@ -2,254 +2,122 @@
 
 [![checks](https://github.com/cn-nnzy/ExporterContract/actions/workflows/ci.yml/badge.svg)](https://github.com/cn-nnzy/ExporterContract/actions/workflows/ci.yml)
 
-Review an exporter's metric schema before a release reaches dashboards and alerts.
-ExporterContract compares reviewed metric declarations and checks whether an
-OpenMetrics scrape conforms to a declaration. It distinguishes a removed metric
-from one that simply did not appear during a test.
+Catch exporter schema changes before a release breaks dashboards and alerts.
+A portable MoonBit library and file-based CI tool for reviewed metric contracts,
+observed-export conformance, test-source coverage and explicit migration decisions.
 
-The intended users are exporter maintainers and platform teams that need a
-repeatable release check for metric names, types, label names, units, and classic
-histogram buckets. The comparison engine is a MoonBit library; a file-based CLI
-provides the same workflow for CI.
+**Initial usable version: 0.1.0**, available from this repository under Apache-2.0.
+Not published to Mooncakes. Examples need no Prometheus server or private service.
 
 ## Try it
 
-Install the [stable MoonBit toolchain](https://www.moonbitlang.com/download/),
-clone this repository, and run from its root:
+Install [stable MoonBit](https://www.moonbitlang.com/download/), then run:
 
 ```sh
+git clone https://github.com/cn-nnzy/ExporterContract.git
+cd ExporterContract
 moon update
-moon run cmd/check -- compare fixtures/kubernetes/baseline.json fixtures/kubernetes/baseline.json
 moon run cmd/check -- verify fixtures/kubernetes/baseline.json fixtures/kubernetes/observation.om --json
 moon run tools/e2e.mbtx
 ```
 
-Both checks return `compatible`. The end-to-end runner also checks failing and
-inconclusive inputs, including these intentional changes:
+The first check returns compatible. The Kubernetes fixture uses three real
+upstream metric definitions with synthetic observations and candidate mutations,
+not a live cluster capture. See [fixture provenance](fixtures/kubernetes/README.md).
 
 ```sh
 moon run cmd/check -- compare fixtures/kubernetes/baseline.json fixtures/kubernetes/breaking.json --json
 ```
 
-That command exits with **1**, reporting removal of a family, removal of the
-`code` label, addition of `status_code`, and a changed histogram layout. The
-fixtures use three real Kubernetes metric definitions; observed values and the
-breaking candidate are deliberately synthetic. This is a reviewed subset, not
-an exhaustive Kubernetes API server inventory. See
-[fixture provenance](fixtures/kubernetes/README.md).
+This deliberately exits 1: a family was removed, a label was replaced and histogram
+bounds changed. The strict stable-v1 policy freezes existing kind, explicit unit,
+label names and finite classic histogram bounds, independently of consumer queries.
 
 ## Adopt the workflow
 
-Start a declaration from integration-test observations rather than typing every
-schema by hand:
+1. Use `draft EXPORTER SCRAPE...` to prepare an incomplete declaration.
+2. Review scope and missing emitters before explicitly attesting completeness.
+3. Keep the released baseline; run `compare` and integration-scrape verification.
+4. Use descriptor-only records and a coverage plan for source-specific CI checks.
+5. Record deliberate breaking migration decisions without changing the underlying
+   incompatible verdict.
 
-```sh
-moon run cmd/check -- draft synthetic-lazy-service fixtures/coverage/startup.om fixtures/coverage/traffic.om
-```
+Missing observation is unknown, never proof of deletion. Good evidence cannot
+overwrite bad evidence. Unsupported input rejects the whole input.
 
-This prints canonical contract JSON with **`complete: false`**. Review the scope,
-exercise missing paths and add their declarations before manually attesting that
-an inventory is exhaustive. `draft_contract(exporter, observations)` is the
-corresponding library API. Conflicting kinds, units, label sets or histogram
-layouts reject drafting with both source locations; they are never unioned or
-resolved by last-write-wins. No observed values are exported into the draft.
-An all-empty batch cannot produce a declaration.
+## Commands
 
-1. Describe the metric families your exporter promises to consumers. Commit the
-   JSON contract with `complete: true` only when it exhaustively covers the
-   exporter scope you are checking. Keep the baseline from the released version.
-2. Update a candidate declaration alongside instrumentation changes. Run
-   `compare baseline.json candidate.json --json` in release CI.
-3. Exercise representative application paths, save their OpenMetrics output,
-   and run `verify candidate.json scrape.om --json`. Missing observations require
-   more evidence; they do not justify a deletion finding.
+Prefix each command with `moon run cmd/check --`. File inputs are local UTF-8.
+Artifact commands print JSON; gate commands accept optional `--json`.
 
-The `stable-v1` policy freezes each existing family's kind, explicit unit,
-complete label-name set, and finite classic histogram bounds. Additions are
-notices; deletion from an exhaustive candidate is breaking. This is a deliberately
-strict release policy, not a claim that every schema change breaks every query.
+| Command | Purpose |
+| --- | --- |
+| `compare BASE CAND [--json]` | Declared compatibility gate |
+| `verify CONTRACT SCRAPE [--json]` | Single-export conformance gate |
+| `verify-many CONTRACT SCRAPE... [--json]` | Batch gate and emission coverage |
+| `draft EXPORTER SCRAPE...` | Incomplete draft; conflicts reject |
+| `record SCRAPE` | Validate scrape and emit descriptor-only evidence |
+| `verify-record CONTRACT RECORD [--json]` | Replay descriptor evidence |
+| `verify-plan CONTRACT PLAN RECORD... [--json]` | Require emission from designated sources |
+| `normalize CONTRACT` | Validate and canonicalize declaration |
+| `combine CONTRACT...` | Merge consistent declarations; reject contradictory completeness |
+| `select CONTRACT SCOPE FAMILY...` | Explicitly named subset, inheriting completeness |
+| `diff BASE CAND` | Exact before/after schema artifact |
+| `review-template BASE CAND` | Exact-model-bound review template |
+| `assess BASE CAND REVIEW [--json]` | Migration decision gate |
 
-| Exit | Meaning | Typical next action |
-| --- | --- | --- |
-| 0 | Compatible within the report's scope | Review notices, then accept this check |
-| 1 | Incompatible | Preserve the schema or plan a consumer migration |
-| 2 | Invalid or unsupported input / command | Correct the input; no partial verdict is returned |
-| 3 | Inconclusive | Supply an exhaustive declaration or exercise missing emitters |
+Gate exits: **0 compatible, 1 incompatible, 2 invalid, 3 inconclusive**.
+Artifact commands return 0 for successful preparation, including breaking diffs;
+they are not compatibility gates. Assessment exits are 0 ready, 1 needs review,
+2 invalid/stale, 3 inconclusive. Errors are JSON on stderr; results are on stdout.
 
-These verdict exits apply to `compare`, `verify` and `verify-many`. `normalize`,
-`draft` and `review-template` return 0 when they successfully prepare an artifact.
-`assess` uses the separate migration-readiness statuses documented below.
+## Library and detailed examples
 
-`compare` reports have scope `declared-contracts`. `verify` reports have scope
-`observed-export-only`: even a successful scrape check cannot prove that unseen
-runtime paths conform. Input failures go to stderr as JSON. Reports go to stdout
-as text, or as versioned JSON with `--json`. `normalize CONTRACT.json` validates
-and prints the canonical contract representation.
-
-## Library API
-
-For test plans that require a family from a particular path, use
-`verify_required_sources(contract, observations, requirements)`. Requirements map
-declared family names to 1–64 distinct source identifiers. A family seen only in
-another source remains unknown for that requirement, even if aggregate coverage
-is complete. Missing sources also produce unknown evidence; schema violations
-still dominate. Unknown families, duplicate sources and empty plans are errors.
-There are at most 10,000 family requirements; ordinary batch limits still apply.
-Source names are assertions by the caller, not authenticated test identities.
-This is a portable library API; run its complete example with:
-
-```sh
-moon run examples/coverage
-```
-
-The synthetic example deliberately observes `active` in a startup test while
-requiring it in a traffic test, and asserts an inconclusive verdict. The returned
-`BatchReport` retains evidence and diagnostics with scope `required-source-coverage`.
-
-Store descriptor evidence instead of raw scrape values:
-
-```sh
-moon run cmd/check -- record fixtures/coverage/traffic.om
-moon run cmd/check -- verify-record fixtures/coverage/contract.json fixtures/coverage/traffic.record.json --json
-```
-
-`record` validates the supported wire profile before emitting record format 1,
-`descriptor-only-v1`. `Observation::to_json()` and `read_observation()` support
-portable round trips, retaining repeated family groups and source identifiers.
-Sample values, label values and original wire bytes are deliberately absent.
-Records are asserted descriptor evidence, not authenticated scrape captures or
-proof of wire validity; verify original scrapes when that guarantee is needed.
-Unknown fields and profiles reject the whole record. Source identifiers are
-caller-controlled and retained, so use non-sensitive names. Input is bounded to
-2,097,152 code units and nesting depth 32. The record fixture is synthetic.
-
-`contract_diff(before, after)` returns exact schema changes with sorted family
-names and full `before`/`after` descriptors; additions/removals use null on the
-missing side. Completeness flags are retained separately, even if schemas are
-unchanged. This supports release review without reconstructing changes from
-diagnostic prose. It makes no rename guesses and rejects different exporter scopes.
-
-```sh
-moon run cmd/check -- diff fixtures/kubernetes/baseline.json fixtures/kubernetes/breaking.json
-```
-
-`diff` exits 0 for a successfully produced artifact, including breaking changes;
-use `compare` as the compatibility gate. Format version 1 contains `exporter`,
-`complete_before`, `complete_after` and `changes`.
-
-Extract a team-owned scope with `select_contract(contract, names, exporter~)` or:
-
-```sh
-moon run cmd/check -- select fixtures/coverage/contract.json http-scope requests
-```
-
-Every requested family must exist and occur once. The new scope identifier must
-differ from the parent; completeness is inherited, never upgraded. Compare only
-contracts with the same selected scope across releases. This selects declarations,
-not scrape data: passing a full scrape to this subset still reports undeclared
-families. Empty selections and misspelled names are errors. Output is a canonical
-contract artifact with exit 0 on success.
-
-`combine_contracts(parts)` combines 1–64 declarations for the same exporter.
-Identical repeated descriptors are deduplicated; conflicting schemas and generated
-wire-name collisions reject the entire combination. The result is complete only
-if all exhaustive declarations agree and no fragment adds an undeclared family;
-contradictory completeness claims are errors. It remains complete only
-if every input is complete. Combining partial fragments never proves an inventory
-exhaustive. For example, run `moon run cmd/check -- combine
-fixtures/coverage/contract.json fixtures/coverage/contract.json` to deduplicate
-identical declarations. The CLI prints a canonical artifact and exits 0 on success.
-
-For a deliberately breaking release, generate a version-bound review template
-with `review-template BASELINE.json CANDIDATE.json`, record individual decisions,
-then run `assess BASELINE.json CANDIDATE.json REVIEW.json --json`. A ready migration
-retains the underlying `incompatible` verdict. Unknown evidence cannot be
-approved away, and changing either contract invalidates old decisions. See the
-[complete migration example and trust model](docs/migration.md).
-
-For lazy metrics emitted by different integration paths, combine their evidence:
-
-```sh
-moon run cmd/check -- verify-many fixtures/coverage/contract.json fixtures/coverage/startup.om fixtures/coverage/traffic.om --json
-```
-
-The result includes sorted `sources` and per-family `coverage` entries. Every
-descriptor is checked; a good scrape cannot override a mismatch in another.
-Missing families are unknown only when absent from the entire batch. Sources
-must be distinct, with 1–64 observations and at most 100,000 descriptors total.
-The library operation is `verify_exports(contract, observations) -> BatchReport`;
-`BatchReport::report()` returns the verdict/findings. This proves emission in the
-supplied sources, not coverage of every runtime path. The synthetic fixtures in
-`fixtures/coverage` model startup and traffic-driven emission.
-
-The root package contains the model and policy, independent of file I/O. The
-`adapters/openmetrics` package converts supported OpenMetrics observations using
-[moonopenmetrics](https://mooncakes.io/docs/JYPeng487/moonopenmetrics).
-
-```moonbit
-let metric = @contract.Metric::new("requests", Counter, ["method", "status"])
-let baseline = @contract.Contract::new("my-service", [metric], complete=true)
-let candidate = @contract.read_contract(candidate_json)
-let report = @contract.compare_contracts(baseline, candidate)
-let observation = @openmetrics.read_export(scrape_text, source="integration-test")
-let observed_report = @contract.verify_export(candidate, observation)
-```
-
-Import `cn-nnzy/exportercontract` as `contract` and
-`cn-nnzy/exportercontract/adapters/openmetrics` as `openmetrics`. The snippet
-belongs in a function handling `ContractError` and `ExportError`. The complete
-[runnable library example](examples/api/main.mbt) constructs a declaration,
-reads a scrape, checks it, and prints its report:
+The root package `cn-nnzy/exportercontract` contains validated models, strict JSON
+codecs, comparisons, composition, scope selection, coverage and migration review.
+`adapters/openmetrics` reuses
+[moonopenmetrics](https://mooncakes.io/docs/JYPeng487/moonopenmetrics) for parsing
+and semantic validation. Public APIs are recorded in generated `pkg.generated.mbti`.
 
 ```sh
 moon run examples/api
+moon run examples/coverage
+moon run cmd/check -- verify-plan fixtures/coverage/contract.json fixtures/coverage/plan.json fixtures/coverage/startup.record.json fixtures/coverage/traffic.record.json --json
 ```
 
-Version 0.1.0 is source-available here; it has not been published to Mooncakes.
-Use this checkout for the commands above. Public API inventories are committed
-as `pkg.generated.mbti` files. See [contract format and limits](docs/contract.md)
-for the supported input profile and error rules.
+The coverage library example deliberately asserts an inconclusive verdict:
+startup evidence does not satisfy a traffic-test requirement. The file gate
+uses synthetic records covering both required sources and returns compatible.
 
-## Support and validation
+* [Contract format, policy and resource limits](docs/contract.md)
+* [File-based coverage plan workflow](docs/coverage-plan.md)
+* [Migration review example and trust model](docs/migration.md)
+* [Ecosystem boundary](docs/ecosystem.md)
+* [Third-party sources and licenses](THIRD_PARTY.md)
+* [Initial version changes](CHANGELOG.md)
+* [Development and verification](CONTRIBUTING.md)
 
-The pure library and OpenMetrics adapter support Wasm, Wasm-GC, JavaScript and
-native targets. The asynchronous file CLI supports **Wasm and native**. It reads
-local UTF-8 files and needs neither a running Prometheus server nor private
-infrastructure. It does not fetch HTTP endpoints.
+Records omit raw sample/label values and original wire bytes. They are asserted
+descriptor evidence, not authenticated scrape captures or proof of wire validity.
+Source identifiers and review identities are caller assertions. Unknown fields,
+profiles, duplicate keys and unsupported data are rejected.
 
-Development validation uses stable `moon 0.1.20261104` and
-`moonc v0.10.20+65efd5b93`. CI installs the current stable distribution and prints
-its version on Linux, macOS and Windows. Each job builds and tests all four
-targets, checks generated interfaces, and executes the CLI on Wasm and native.
-Windows native builds require a Visual C++ developer environment; the workflow
-initializes it explicitly. JavaScript tests require Node.js.
+## Supported scope
 
-```sh
-moon fmt --check
-moon info --target all
-moon check --target all --deny-warn
-moon test --target wasm --deny-warn
-moon test --target wasm-gc --deny-warn
-moon test --target js --deny-warn
-moon test --target native --deny-warn
-moon build --target all --deny-warn
-moon run tools/e2e.mbtx wasm
-moon run tools/e2e.mbtx native
-```
+The pure library and adapter support Wasm, Wasm-GC, JavaScript and native.
+The file CLI supports **Wasm and native**. CI builds/tests all four targets on
+Linux, macOS and Windows and executes CLI scenarios on Wasm and native.
+JavaScript requires Node.js; Windows native needs a Visual C++ developer environment.
 
-Tests cover strict input rejection and recovery, canonical round trips,
-permutation invariance, defensive copies, bucket boundaries, incomplete
-evidence, and supported observation profiles. Report data includes metric and
-label **names**, but not observed label **values**. Callers choose source
-identifiers, which are included in diagnostics.
+Wire support is the documented OpenMetrics 1.0 profile: explicit counter, gauge
+and classic histogram families with EOF. Summaries, info/state sets, native
+histograms, exemplars, explicit timestamps and created-time series are rejected.
+HTTP collection, time-series storage, PromQL parsing, alert graphs, sample-value
+comparison and arbitrary policies are outside this version.
 
-## Next capabilities
-
-The current milestone includes a file-based contract gate, multi-observation
-coverage evidence, conservative declaration drafting and version-bound migration
-review records. Follow-up work will add narrowly reviewed metadata profiles;
-these are planned, not implemented. PromQL parsing, alert dependency graphs,
-instrumentation and time-series storage remain outside the project boundary.
-
-See [ecosystem boundary](docs/ecosystem.md) and
-[third-party sources](THIRD_PARTY.md). Licensed under Apache-2.0.
+Development validation uses moon 0.1.20261104 and moonc v0.10.20+65efd5b93.
+CI installs stable and records the actual version. Run
+`moon run tools/validate.mbtx` for local portable checks; CI additionally verifies
+native execution. The initial milestone is complete at this boundary. Additional
+wire profiles and distribution packages remain future work. No production
+adoption, ecosystem uniqueness or performance superiority is claimed.

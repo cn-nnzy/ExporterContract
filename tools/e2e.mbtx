@@ -65,6 +65,21 @@ async fn migration_template_example(target : String) -> Unit {
   assert_eq(reviewer, "")
 }
 
+async fn record_output(target : String) -> Unit {
+  let result = @shell.Cmd("moon", ["run", "--target", target, "cmd/check", "--", "record", "fixtures/coverage/traffic.om"]).output(timeout_ms=120000)
+  assert_eq(result.exit_code(), 0)
+  let value = @json.parse(result.stdout())
+  guard value is Object(fields) else { fail("expected record object") }
+  assert_eq(fields.length(), 4)
+  guard fields["profile"] is String(profile) else { fail("expected explicit profile") }
+  assert_eq(profile, "descriptor-only-v1")
+  guard fields["descriptors"] is Array(entries) && entries.length() == 1 else { fail("expected traffic descriptor") }
+  guard entries[0] is { "name": String(name), "labels": Array(labels), .. } else { fail("expected schema") }
+  assert_eq(name, "requests")
+  assert_eq(labels, [Json::string("method")])
+  assert_false(result.stdout().contains("GET"))
+}
+
 async fn main {
   let target = @env.args().get(1).unwrap_or("wasm")
   let baseline = "fixtures/kubernetes/baseline.json"
@@ -114,5 +129,6 @@ async fn main {
   check(target, ["verify-plan", coverage, plan, startup_record, "--json"], 3, "inconclusive")
   check(target, ["verify-plan", coverage, plan, startup_record, startup_record, "--json"], 2, "")
   check(target, ["verify-plan", coverage, "fixtures/invalid.json", traffic_record, "--json"], 2, "")
-  println("41 CLI scenarios passed on \{target}")
+  record_output(target)
+  println("42 CLI scenarios passed on \{target}")
 }
