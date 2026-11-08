@@ -9,6 +9,8 @@ import {
 // Values
 pub fn compare_contracts(Contract, Contract) -> Report raise ContractError
 
+pub fn draft_contract(String, Array[Observation]) -> Contract raise ContractError
+
 pub fn read_contract(String) -> Contract raise ContractError
 
 pub fn verify_export(Contract, Observation) -> Report

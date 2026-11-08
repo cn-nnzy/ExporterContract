@@ -36,6 +36,7 @@ fn usage() -> String {
     #|  compare BASELINE.json CANDIDATE.json [--json]
     #|  verify CONTRACT.json SCRAPE.om [--json]
     #|  verify-many CONTRACT.json SCRAPE.om [SCRAPE.om ...] [--json]
+    #|  draft EXPORTER SCRAPE.om [SCRAPE.om ...]
     #|  normalize CONTRACT.json
     #|  help
     #|Exit codes: 0 compatible, 1 incompatible, 2 invalid input/usage, 3 inconclusive.
@@ -49,7 +50,9 @@ async fn read_observations(
   paths : ArrayView[String],
 ) -> Array[@contract.Observation] {
   if paths.is_empty() || paths.length() > 64 {
-    raise InputError("batch-size-1-to-64", "/observations")
+    raise @contract.ContractError(
+      "batch-size", "/observations", "supply between 1 and 64 scrape paths",
+    )
   }
   let observations = []
   for path in paths {
@@ -72,6 +75,10 @@ async fn run(args : Array[String]) -> (String, Int32) {
   let as_json = args.last() == Some("--json")
   let args = if as_json { args[:args.length() - 1].to_owned() } else { args }
   let result = match args {
+    ["draft", exporter, .. paths] if !as_json => {
+      let draft = @contract.draft_contract(exporter, read_observations(paths))
+      return (draft.to_text(), 0)
+    }
     ["verify-many", declaration, .. paths] => {
       let contract = @contract.read_contract(read_text(declaration))
       let batch = @contract.verify_exports(contract, read_observations(paths))

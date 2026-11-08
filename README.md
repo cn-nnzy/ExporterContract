@@ -40,6 +40,21 @@ an exhaustive Kubernetes API server inventory. See
 
 ## Adopt the workflow
 
+Start a declaration from integration-test observations rather than typing every
+schema by hand:
+
+```sh
+moon run cmd/check -- draft synthetic-lazy-service fixtures/coverage/startup.om fixtures/coverage/traffic.om
+```
+
+This prints canonical contract JSON with **`complete: false`**. Review the scope,
+exercise missing paths and add their declarations before manually attesting that
+an inventory is exhaustive. `draft_contract(exporter, observations)` is the
+corresponding library API. Conflicting kinds, units, label sets or histogram
+layouts reject drafting with both source locations; they are never unioned or
+resolved by last-write-wins. No observed values are exported into the draft.
+An all-empty batch cannot produce a declaration.
+
 1. Describe the metric families your exporter promises to consumers. Commit the
    JSON contract with `complete: true` only when it exhaustively covers the
    exporter scope you are checking. Keep the baseline from the released version.
@@ -147,10 +162,10 @@ identifiers, which are included in diagnostics.
 
 ## Next capabilities
 
-The current milestone includes a file-based contract gate and multi-observation
-coverage evidence. Follow-up work is ordered by workflow: prepare reviewable
-declarations from observations, then add baseline migration support with explicit
-approval records and narrowly reviewed metadata profiles. These are plans,
+The current milestone includes a file-based contract gate, multi-observation
+coverage evidence and conservative declaration drafting. Follow-up work is ordered
+by workflow: baseline migration support with explicit approval records, then
+narrowly reviewed metadata profiles. These are plans,
 not implemented features. PromQL parsing, alert dependency graphs,
 instrumentation and time-series storage remain outside the project boundary.
 

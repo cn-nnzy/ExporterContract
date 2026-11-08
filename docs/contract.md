@@ -65,6 +65,16 @@ not source spans. Parser errors include line/column when available.
 
 ## Accepted observation profile
 
+`draft_contract(exporter, observations)` uses the same batch admission rules and
+always returns an incomplete declaration. All observations of a family must have
+identical kind, unit, label names and numeric bounds, including separate groups
+within a single scrape. Differences are input errors with both source locations.
+Generated sample-name collisions are also rejected. An all-empty batch is an
+error. Equivalent descriptors are deduplicated, names are sorted and observed
+values are omitted. This is schema preparation, not a scrape-to-exhaustive-contract
+conversion. The CLI `draft EXPORTER SCRAPE...` returns exit 0 for a successfully
+prepared artifact, not for a compatibility verdict; failure is exit 2.
+
 `verify_exports` checks a batch of 1–64 observations with unique source
 identifiers and at most 100,000 descriptors in total. Its `BatchReport` includes
 all source identifiers (including empty observations), sorted per-family source

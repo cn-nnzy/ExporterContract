@@ -25,6 +25,22 @@ async fn check(target : String, arguments : Array[String], expected_code : Int32
   }
 }
 
+async fn draft_example(target : String) -> Unit {
+  let prefix = ["run", "--target", target, "cmd/check", "--", "draft", "synthetic-lazy-service"]
+  let first = prefix + ["fixtures/coverage/startup.om", "fixtures/coverage/traffic.om"]
+  let second = prefix + ["fixtures/coverage/traffic.om", "fixtures/coverage/startup.om"]
+  let a = @shell.Cmd("moon", first).output(timeout_ms=120000)
+  let b = @shell.Cmd("moon", second).output(timeout_ms=120000)
+  assert_eq(a.exit_code(), 0)
+  assert_eq(b.exit_code(), 0)
+  assert_eq(a.stdout(), b.stdout())
+  let value = @json.parse(a.stdout())
+  guard value is { "complete": False, "metrics": Array(metrics), .. } && metrics.length() == 2 else {
+    fail("draft must contain two observed schemas and remain explicitly incomplete")
+  }
+  assert_false(a.stdout().contains("GET"))
+}
+
 async fn main {
   let target = @env.args().get(1).unwrap_or("wasm")
   let baseline = "fixtures/kubernetes/baseline.json"
@@ -45,5 +61,9 @@ async fn main {
   check(target, ["verify-many", coverage, startup, "fixtures/coverage/mismatch.om", traffic, "--json"], 1, "incompatible")
   check(target, ["verify-many", coverage, startup, startup, "--json"], 2, "")
   check(target, ["verify-many", coverage, startup, "fixtures/unsupported.om", "--json"], 2, "")
-  println("14 CLI scenarios passed on \{target}")
+  draft_example(target)
+  check(target, ["draft", "synthetic-lazy-service", startup, "fixtures/coverage/mismatch.om"], 2, "")
+  check(target, ["draft", "synthetic-lazy-service", "fixtures/empty.om"], 2, "")
+  check(target, ["draft", "synthetic-lazy-service", startup, "fixtures/unsupported.om"], 2, "")
+  println("19 CLI scenarios passed on \{target}")
 }
